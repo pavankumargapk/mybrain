@@ -1,0 +1,236 @@
+Integrated code for gestures and voice controlled module:
+#include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
+LiquidCrystal lcd(12,11,10,9,8,7);//rs,en,data pins d4 -d7
+SoftwareSerial myserial(4, 5); // RX, TX
+int relay1 = 2; //Connect relay1 To Pin #2 
+int fan = 3; //Connect fan To Pin #3 
+String voice;
+char c;
+unsigned int MEMSX;
+unsigned int MEMSY;
+void setup() 
+{
+lcd.begin(16,2);
+pinMode(relay1, OUTPUT); 
+pinMode(fan, OUTPUT);
+myserial.begin(9600);
+lcd.setCursor(0,0);
+lcd.print("VOICE & GESTURE");
+lcd.setCursor(0,1);
+lcd.print("CONTROLED");
+delay (3000);
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("Home Appliances");
+delay (3000);
+lcd.clear();
+digitalWrite(relay1,LOW);
+digitalWrite(fan,LOW);
+}
+void allon(){digitalWrite(relay1, HIGH);
+delay (300);
+digitalWrite(fan, HIGH);
+delay (300);}
+void alloff(){digitalWrite(relay1, LOW);
+delay (300);
+digitalWrite(fan, LOW);
+delay (300);
+}
+//-----------------------------------------------------------------------//  
+void loop() 
+{
+MEMSX = analogRead(0);
+MEMSX=MEMSX/2;
+lcd.setCursor(0,0);
+lcd.print("X:");
+lcd.setCursor(2,0);
+lcd.print(MEMSX);
+delay(500);
+MEMSY = analogRead(1);
+MEMSY=MEMSY/2;
+lcd.setCursor(0,1);
+lcd.print("Y: ");
+lcd.setCursor(2,1);
+lcd.print(MEMSY);
+delay(500);
+/////////////////////////////////////////////////////////////////////////////////////////
+if(((MEMSX >= 160) & (MEMSX <= 175)) &  ( (MEMSY >= 160) & (MEMSY <= 175 )) )
+{
+lcd.setCursor(5,0);
+lcd.print("MEMS NORMAL");
+delay(1000);
+}
+/////////////////////////////////////////////////////////////
+if(((MEMSX >= 130) & (MEMSX <= 145)) &  ( (MEMSY >= 160) & (MEMSY <= 175 )) )
+{
+lcd.clear(); 
+lcd.setCursor(5,0);
+lcd.print("BULB ON  ");
+digitalWrite(relay1,HIGH);
+delay(2000);
+}
+if(((MEMSX >= 190) & (MEMSX <= 200)) &  ( (MEMSY >= 160) & (MEMSY <= 175 )) )
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("BULB OFF ");
+digitalWrite(relay1,LOW);
+delay(2000);
+}
+/////////////////////////////////////////////////// 
+if(((MEMSX >= 160) & (MEMSX <= 175)) &  ( (MEMSY >= 130) & (MEMSY <= 150 )) )
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("FAN ON  ");
+digitalWrite(fan,HIGH);
+delay(2000);
+}
+if(((MEMSX >= 160) & (MEMSX <= 175)) &  ( (MEMSY >= 180) & (MEMSY <= 195 )) )
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("FAN OFF ");
+digitalWrite(fan,LOW);
+delay(2000);
+}
+lcd.setCursor(5,1);lcd.print("VOICE INPUT");
+//////////////////////////////////////////////////////////////////////////////////////////
+while (myserial.available()){  //Check if there is an available byte to read
+delay(10); //Delay added to make thing stable 
+char c = myserial.read(); //Conduct a serial read
+if (c == '#') {break;} //Exit the loop when the # is detected after the word
+voice += c; //Shorthand for voice = voice + c
+}  
+if (voice.length() > 0) {
+Serial.println(voice); 
+//-----------------------------------------------------------------------//    
+//----------Control Multiple Pins/ LEDs----------//  
+if(voice == "*all on"){lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("all on");
+allon();
+myserial.println("all on");
+delay (3000);
+lcd.clear();
+}  //Turn on All Pins (Call Function)
+else if(voice == "*all all"){lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("all on");
+allon();
+myserial.println("all on");
+delay (3000);
+lcd.clear();
+}  //Turn on All Pins (Call Function)
+else if(voice == "*all of")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("all off");
+alloff();
+myserial.println("all off");
+delay (3000);
+lcd.clear();
+} //Turn off  All Pins (Call Function)
+//----------Turn On One-By-One----------// 
+else if(voice == "*light on")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("light on");
+digitalWrite(relay1, HIGH);
+myserial.println("light on");
+delay (3000);
+lcd.clear();
+} 
+else if(voice == "*bulb on")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("bulb on");
+digitalWrite(relay1, HIGH);
+myserial.println("bulb on");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*fan on")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("fan on");
+digitalWrite(fan, HIGH);
+myserial.println("fan on");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*DC on")
+{
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("DC MOTOR/FAN ON");
+digitalWrite(fan, HIGH);
+myserial.println("DCMOTOR on");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*AC on")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("AC on");
+digitalWrite(fan, HIGH);
+myserial.println("AC on");
+delay (3000);
+lcd.clear();
+}
+//----------Turn Off One-By-One----------// 
+else if(voice == "*light off")
+{lcd.clear();lcd.setCursor(5,0);
+lcd.print("light off");
+digitalWrite(relay1, LOW);
+myserial.println("light off");
+delay (3000);
+lcd.clear();
+} 
+else if(voice == "*bulb of")
+{lcd.clear();lcd.setCursor(5,0);
+lcd.print("bulb of");
+digitalWrite(relay1, LOW);
+myserial.println("bulb oF");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*fan of")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("fan off");
+digitalWrite(fan, LOW);
+myserial.println("fan of");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*DC of")
+{
+lcd.clear();
+lcd.setCursor(0,0);
+lcd.print("DC MOTOR/FAN OFF");
+digitalWrite(fan, LOW);
+myserial.println("DCMOTOR OFF");
+delay (3000);
+lcd.clear();
+}
+else if(voice == "*AC off")
+{
+lcd.clear();
+lcd.setCursor(5,0);
+lcd.print("AC oFF");
+digitalWrite(fan, LOW);
+myserial.println("AC OFF");
+delay (3000);
+lcd.clear();
+}
+//-----------------------------------------------------------------------//  
+voice="";
+}
